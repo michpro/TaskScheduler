@@ -4,11 +4,9 @@
    as I can think of. So, here we go.
 
    Tested on:
-   - Arduino Nano
-   - ESP8266
-   - ESP32
-   - STM32 Maple Mini
+   - Bluefruit nRF52840
 */
+
 
 // ----------------------------------------
 // The following "defines" control library functionality at compile time,
@@ -32,10 +30,11 @@
 // #define _TASK_EXTERNAL_TIME      // Custom millis() and micros() methods
 // #define _TASK_THREAD_SAFE        // Enable additional checking for thread safety
 // #define _TASK_SELF_DESTRUCT      // Enable tasks to "self-destruct" after disable
-#include <TaskScheduler.h>
+
+#include <TScheduler.hpp>
 
 // Debug and Test options
-#define _DEBUG_
+//#define _DEBUG_
 //#define _TEST_
 
 #ifdef _DEBUG_
@@ -52,7 +51,7 @@
 #endif
 
 // Scheduler
-Scheduler ts;
+TsScheduler ts;
 
 /*
    Approach 1: LED is driven by the boolean variable; false = OFF, true = ON
@@ -60,7 +59,7 @@ Scheduler ts;
 #define PERIOD1 500
 #define DURATION 10000
 void blink1CB();
-Task tBlink1 ( PERIOD1 * TASK_MILLISECOND, DURATION / PERIOD1, &blink1CB, &ts, true );
+TsTask tBlink1 ( PERIOD1 * TASK_MILLISECOND, DURATION / PERIOD1, &blink1CB, &ts, true );
 
 /*
    Approac 2: two callback methods: one turns ON, another turns OFF
@@ -68,14 +67,14 @@ Task tBlink1 ( PERIOD1 * TASK_MILLISECOND, DURATION / PERIOD1, &blink1CB, &ts, t
 #define PERIOD2 400
 void blink2CB_ON();
 void blink2CB_OFF();
-Task tBlink2 ( PERIOD2 * TASK_MILLISECOND, DURATION / PERIOD2, &blink2CB_ON, &ts, false );
+TsTask tBlink2 ( PERIOD2 * TASK_MILLISECOND, DURATION / PERIOD2, &blink2CB_ON, &ts, false );
 
 /*
    Approach 3: Use RunCounter
 */
 #define PERIOD3 300
 void blink3CB();
-Task tBlink3 (PERIOD3 * TASK_MILLISECOND, DURATION / PERIOD3, &blink3CB, &ts, false);
+TsTask tBlink3 (PERIOD3 * TASK_MILLISECOND, DURATION / PERIOD3, &blink3CB, &ts, false);
 
 /*
    Approach 4: Use status request objects to pass control from one task to the other
@@ -85,8 +84,8 @@ bool blink41OE();
 void blink41();
 void blink42();
 void blink42OD();
-Task tBlink4On  ( PERIOD4 * TASK_MILLISECOND, TASK_ONCE, blink41, &ts, false, &blink41OE );
-Task tBlink4Off ( PERIOD4 * TASK_MILLISECOND, TASK_ONCE, blink42, &ts, false, NULL, &blink42OD );
+TsTask tBlink4On  ( PERIOD4 * TASK_MILLISECOND, TASK_ONCE, blink41, &ts, false, &blink41OE );
+TsTask tBlink4Off ( PERIOD4 * TASK_MILLISECOND, TASK_ONCE, blink42, &ts, false, NULL, &blink42OD );
 
 
 /*
@@ -97,8 +96,8 @@ bool blink51OE();
 void blink51();
 void blink52();
 void blink52OD();
-Task tBlink5On  ( 600 * TASK_MILLISECOND, DURATION / PERIOD5, &blink51, &ts, false, &blink51OE );
-Task tBlink5Off ( 600 * TASK_MILLISECOND, DURATION / PERIOD5, &blink52, &ts, false, NULL, &blink52OD );
+TsTask tBlink5On  ( 600 * TASK_MILLISECOND, DURATION / PERIOD5, &blink51, &ts, false, &blink51OE );
+TsTask tBlink5Off ( 600 * TASK_MILLISECOND, DURATION / PERIOD5, &blink52, &ts, false, NULL, &blink52OD );
 
 
 /*
@@ -108,7 +107,7 @@ Task tBlink5Off ( 600 * TASK_MILLISECOND, DURATION / PERIOD5, &blink52, &ts, fal
 void blink6CB();
 bool blink6OE();
 void blink6OD();
-Task tBlink6 ( PERIOD6 * TASK_MILLISECOND, DURATION / PERIOD6, &blink6CB, &ts, false, &blink6OE, &blink6OD );
+TsTask tBlink6 ( PERIOD6 * TASK_MILLISECOND, DURATION / PERIOD6, &blink6CB, &ts, false, &blink6OE, &blink6OD );
 
 void setup() {
   // put your setup code here, to run once:
@@ -224,7 +223,7 @@ void blink41() {
   //  _PP(millis());
   //  _PL(": blink41");
   LEDOn();
-  StatusRequest* r = tBlink4On.getInternalStatusRequest();
+  TsStatusRequest* r = tBlink4On.getInternalStatusRequest();
   tBlink4Off.waitForDelayed( r );
   counter++;
 }
@@ -233,7 +232,7 @@ void blink42() {
   //  _PP(millis());
   //  _PL(": blink42");
   LEDOff();
-  StatusRequest* r = tBlink4Off.getInternalStatusRequest();
+  TsStatusRequest* r = tBlink4Off.getInternalStatusRequest();
   tBlink4On.waitForDelayed( r );
   counter++;
 }
